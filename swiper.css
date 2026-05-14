@@ -1,0 +1,10 @@
+  .slider_ci.swiper-slide {
+    height: auto; 
+    transition-property: background-color, color, border-color !important; 
+    
+    /* Hardware acceleration to stop flicker */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
