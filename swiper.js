@@ -48,8 +48,34 @@
       const isCentered = sliderSection.getAttribute('slider-centered') === 'true';
       sliderWrapper.style.transitionTimingFunction = sliderSection.getAttribute('slider-easing') || 'ease';
 
+      // Handle pips if enabled
+      const hasPips = sliderSection.getAttribute('slider-pips') === 'true';
+      let pipContainer = null;
+      let pips = [];
+
+      if (hasPips) {
+        const pipTemplate = sliderSection.querySelector('[slider="pip"]');
+        if (pipTemplate) {
+          pipContainer = pipTemplate.parentNode;
+          const slides = sliderWrapper.querySelectorAll('[slider="item"]');
+          const slideCount = slides.length;
+
+          // Remove the template pip
+          pipTemplate.remove();
+
+          // Create pips for each slide
+          slides.forEach((slide, index) => {
+            const pip = pipTemplate.cloneNode(true);
+            pip.removeAttribute('slider-pip-template');
+            if (index === 0) pip.classList.add('selected');
+            pipContainer.appendChild(pip);
+            pips.push(pip);
+          });
+        }
+      }
+
       // Initialize Swiper
-      new Swiper(swiperContainer, {
+      const swiper = new Swiper(swiperContainer, {
         speed: duration,
         centeredSlides: isCentered,
         loop: isCentered,
@@ -100,7 +126,77 @@
               this.update(); 
             }
           },
+          slideChange: function () {
+            if (hasPips && pips.length > 0) {
+              // Update pip selection
+              const activeIndex = this.realIndex % pips.length;
+              pips.forEach((pip, index) => {
+                pip.classList.toggle('selected', index === activeIndex);
+              });
+            }
+          }
         }
       });
+
+      // Handle auto-scroll if enabled
+      let pauseAutoScroll = () => {}; // Default no-op function
+      const autoScrollAttr = sliderSection.getAttribute('slider-auto');
+      if (autoScrollAttr) {
+        const scrollDelay = parseInt(autoScrollAttr);
+        if (!isNaN(scrollDelay)) {
+          let autoScrollTimer = null;
+          let pauseTimer = null;
+
+          const startAutoScroll = () => {
+            if (autoScrollTimer) return;
+            autoScrollTimer = setInterval(() => {
+              swiper.slideNext();
+            }, scrollDelay);
+          };
+
+          const stopAutoScroll = () => {
+            if (autoScrollTimer) {
+              clearInterval(autoScrollTimer);
+              autoScrollTimer = null;
+            }
+          };
+
+          pauseAutoScroll = () => {
+            stopAutoScroll();
+            if (pauseTimer) clearTimeout(pauseTimer);
+            pauseTimer = setTimeout(() => {
+              startAutoScroll();
+            }, 60000); // 60 second pause
+          };
+
+          // Pause on user interaction
+          const interactionHandler = () => {
+            pauseAutoScroll();
+          };
+
+          // Listen for navigation button clicks
+          if (btnNext) btnNext.addEventListener('click', interactionHandler);
+          if (btnPrev) btnPrev.addEventListener('click', interactionHandler);
+
+          // Listen for swiper interactions
+          swiperContainer.addEventListener('touchstart', interactionHandler);
+          swiperContainer.addEventListener('mousedown', interactionHandler);
+          swiperContainer.addEventListener('wheel', interactionHandler);
+
+          // Start auto-scroll immediately
+          startAutoScroll();
+        }
+      }
+
+      // Make pips clickable
+      if (hasPips && pips.length > 0) {
+        pips.forEach((pip, index) => {
+          pip.style.cursor = 'pointer';
+          pip.addEventListener('click', () => {
+            swiper.slideToLoop(index);
+            pauseAutoScroll();
+          });
+        });
+      }
     });
   });

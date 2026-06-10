@@ -8,3 +8,34 @@
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
   }
+
+  /* Focus-next opacity states */
+  .swiper.focus-next .swiper-slide {
+    opacity: 0.5;
+    transition: opacity 0.45s cubic-bezier(0.165, 0.84, 0.44, 1);
+  }
+
+  .swiper.focus-next .swiper-slide.focus-next-active {
+    opacity: 1 !important;
+  }
+
+  .swiper.focus-next .swiper-slide.focus-next-next {
+    opacity: 0.5 !important;
+  }
+
+  .swiper.focus-next .swiper-slide:not(.focus-next-active):not(.focus-next-next) {
+    opacity: 0.35 !important;
+  }
+
+  /* Fallback opacity styling when focus-next is not present on the slider container */
+  .section-2.is-slider.swiper .swiper-slide-active {
+    opacity: 1 !important;
+  }
+
+  .section-2.is-slider.swiper .swiper-slide-next {
+    opacity: 0.5 !important;
+  }
+
+  .section-2.is-slider.swiper .swiper-slide:not(.swiper-slide-active):not(.swiper-slide-next) {
+    opacity: 0.35 !important;
+  }
