@@ -22,6 +22,12 @@
 
       // Support for Webflow CMS .w-dyn-list wrappers
       const swiperContainer = sliderWrapper.parentNode;
+      
+      // Assign an ID if not present for CSS targeting
+      if (!swiperContainer.id) {
+        swiperContainer.id = `swiper-${Math.random().toString(36).substr(2, 9)}`;
+      }
+      
       swiperContainer.classList.add('swiper');
       sliderWrapper.classList.add('swiper-wrapper');
       
@@ -42,6 +48,41 @@
       const offsetDesk = getAttr(sliderSection, 'slider-offset', 32, true);
       const offsetTab = getAttr(sliderSection, 'slider-offset-tab', 32, true);
       const offsetMob = getAttr(sliderSection, 'slider-offset-mob', 16, true);
+
+      // 3b. Read width reduction attributes (requires conversion)
+      const widthReduceDesk = getAttr(sliderSection, 'slider-width-reduce', 0, true);
+      const widthReduceTab = getAttr(sliderSection, 'slider-width-reduce-tab', 0, true);
+      const widthReduceMob = getAttr(sliderSection, 'slider-width-reduce-mob', 0, true);
+
+      const hasWidthReduction = widthReduceMob > 0 || widthReduceTab > 0 || widthReduceDesk > 0;
+      const applyWidthReduction = () => {
+        let currentWidthReduce = 0;
+        if (window.innerWidth >= 992) {
+          currentWidthReduce = widthReduceDesk;
+        } else if (window.innerWidth >= 768) {
+          currentWidthReduce = widthReduceTab;
+        } else {
+          currentWidthReduce = widthReduceMob;
+        }
+        
+        const styleId = `width-reduce-${swiperContainer.id}`;
+        let styleTag = document.getElementById(styleId);
+        
+        if (currentWidthReduce > 0) {
+          if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = styleId;
+            document.head.appendChild(styleTag);
+          }
+          styleTag.innerHTML = `
+            #${swiperContainer.id} .swiper-slide {
+              width: calc(100% - ${currentWidthReduce}px) !important;
+            }
+          `;
+        } else if (styleTag) {
+          styleTag.remove();
+        }
+      };
 
       // 4. Read behavior attributes
       const duration = getAttr(sliderSection, 'slider-duration', 300);
@@ -92,7 +133,7 @@
         slideActiveClass: isCentered ? 'focused' : 'swiper-slide-active',
         
         // Base Mobile Settings
-        slidesPerView: itemsMob, 
+        slidesPerView: widthReduceMob > 0 ? 'auto' : itemsMob, 
         spaceBetween: gapMob,
         slidesOffsetBefore: isCentered ? 0 : offsetMob, 
         slidesOffsetAfter: isCentered ? 0 : offsetMob,
@@ -105,13 +146,13 @@
 
         breakpoints: {
           768: {
-            slidesPerView: itemsTab,
+            slidesPerView: widthReduceTab > 0 ? 'auto' : itemsTab,
             spaceBetween: gapTab,
             slidesOffsetBefore: isCentered ? 0 : offsetTab,
             slidesOffsetAfter: isCentered ? 0 : offsetTab,
           },
           992: { 
-            slidesPerView: itemsDesk,
+            slidesPerView: widthReduceDesk > 0 ? 'auto' : itemsDesk,
             spaceBetween: gapDesk,
             slidesOffsetBefore: isCentered ? 0 : offsetDesk,
             slidesOffsetAfter: isCentered ? 0 : offsetDesk,
@@ -122,9 +163,8 @@
         // This ensures clones are perfectly rendered to the left of Slide 1
         on: {
           init: function () {
-            if (isCentered) {
-              this.update(); 
-            }
+            applyWidthReduction();
+            this.update(); 
           },
           slideChange: function () {
             if (hasPips && pips.length > 0) {
@@ -197,6 +237,20 @@
             pauseAutoScroll();
           });
         });
+      }
+
+      // Update width reduction on window resize
+      if (hasWidthReduction) {
+        let resizeTimeout;
+        const resizeHandler = () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => {
+            applyWidthReduction();
+            swiper.update();
+          }, 150);
+        };
+        
+        window.addEventListener('resize', resizeHandler);
       }
     });
   });
