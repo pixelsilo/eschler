@@ -38,3 +38,12 @@ if (typeof ScrollTrigger !== 'undefined') {
   }
   requestAnimationFrame(raf);
 }
+
+// 6. Handle dynamic height changes
+// This ensures Lenis recalculates the page length when content (like forms) expands or toggles
+if (typeof ResizeObserver !== 'undefined') {
+  const resizeObserver = new ResizeObserver(() => {
+    lenis.resize();
+  });
+  resizeObserver.observe(document.body);
+}

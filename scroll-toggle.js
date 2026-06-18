@@ -61,10 +61,29 @@ document.addEventListener("DOMContentLoaded", function() {
       let isSnappingIntoPlace = false;
       
       snapSections.forEach(section => {
+        // Only apply special snapping toggle logic if the attribute is present
+        if (section.getAttribute('data-snap-toggle') !== 'navbar') return;
+
         const rect = section.getBoundingClientRect();
-        // If the top of the snap section is within 250px of the viewport top,
-        // the snap plugin is actively pulling us in.
-        if (Math.abs(rect.top) < 250) {
+        const align = section.getAttribute('data-snap-align') || 'start';
+        
+        // We match the snapping threshold logic. 
+        // For long sections (>100vh), we only want to hide the navbar 
+        // when we are near the actual snap point (start, center, or end).
+        const threshold = 200; 
+
+        // Calculate distance based on alignment
+        let distance = 0;
+        if (align === 'start') {
+          distance = Math.abs(rect.top);
+        } else if (align === 'center') {
+          distance = Math.abs((rect.top + rect.height / 2) - window.innerHeight / 2);
+        } else if (align === 'end') {
+          distance = Math.abs(rect.bottom - window.innerHeight);
+        }
+
+        // If we are within the proximity threshold, treat it as snapping
+        if (distance < threshold) {
           isSnappingIntoPlace = true;
         }
       });
