@@ -5,7 +5,7 @@ const lenis = new Lenis({
   smoothWheel: true,
   smoothTouch: false, 
   syncTouch: true, // <--- This forces Lenis to manage touch inertia
-  touchMultiplier: 1.5, // Optional: tweak this if you want swipes to feel heavier/lighter
+  touchMultiplier: 1, // Optional: tweak this if you want swipes to feel heavier/lighter
 });
 
 // 2. Initialize the Snap plugin
